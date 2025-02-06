@@ -1,5 +1,4 @@
-// src/MapaRN.js
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   ComposableMap,
   Geographies,
@@ -12,15 +11,27 @@ const geoUrl = "/rn.json";
 
 const MapaRN = () => {
   const [hoveredMunicipio, setHoveredMunicipio] = useState(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const mapContainerRef = useRef(null);
+
+  const handleMouseEnter = (event, name) => {
+    const rect = mapContainerRef.current.getBoundingClientRect();
+    setHoveredMunicipio(name);
+    setPosition({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    });
+  };
 
   return (
-    <div style={{ width: "100%", height: "100vh" }}>
+    <div style={{ width: "100%", height: "100vh" }} ref={mapContainerRef}>
       <ComposableMap
         projection="geoMercator"
         projectionConfig={{
           scale: 4000,
           center: [-36, -5.5],
         }}
+        style={{ position: "relative" }}
       >
         <ZoomableGroup>
           <Geographies geography={geoUrl}>
@@ -31,9 +42,7 @@ const MapaRN = () => {
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    onMouseEnter={() => {
-                      setHoveredMunicipio(name);
-                    }}
+                    onMouseEnter={(event) => handleMouseEnter(event, name)}
                     onMouseLeave={() => {
                       setHoveredMunicipio(null);
                     }}
@@ -62,11 +71,13 @@ const MapaRN = () => {
         <div
           style={{
             position: "absolute",
-            top: 20,
-            left: 20,
-            padding: "10px",
-            background: "white",
-            border: "1px solid #ccc",
+            top: position.y + 10,
+            left: position.x + 10,
+            padding: "5px",
+            background: "rgba(0, 0, 0, 0.7)",
+            color: "white",
+            borderRadius: "3px",
+            pointerEvents: "none",
           }}
         >
           {hoveredMunicipio}
